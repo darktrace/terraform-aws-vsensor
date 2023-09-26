@@ -1,14 +1,17 @@
 #### Overview
 
-This Quick Start terraform module deploys Darktrace vSensor virtual threat detection on the Amazon Web Services (AWS) Cloud. Darktrace probes analyze raw data from mirrored virtual private cloud (VPC) traffic to learn to identify threats. This guide covers the steps necessary to deploy this Quick Start.
+This Quick Start terraform module deploys Darktrace vSensor on the Amazon Web Services (AWS) Cloud. 
 
-Amazon Virtual Private Cloud (VPC) traffic mirroring copies traffic from Amazon Elastic Compute Cloud (Amazon EC2) instances you want to monitor. A Network Load Balancer distributes mirrored traffic to Darktrace vSensor probes in private subnets.
+Darktrace vSensor probes analyze raw data from mirrored virtual private cloud (VPC) traffic permitting a connected Darktrace service to learn to identify traffic patterns and threats. Darktrace vSensors are only used in conjunction with a Darktrace cloud service offering or physical Darktrace appliance. 
 
-Darktrace vSensor extracts relevant metadata from mirrored traffic and stores it in an Amazon Simple Storage Service (Amazon S3) bucket. This metadata is then analyzed by the connected Darktrace platform to develop 'patterns of life' for observed assets, to compare new activity to this expected "normal", and to identify unusual behavior indicative of potential threats.
+Darktrace vSensors accept traffic from mirroring services (such as AWS Traffic mirroring) and from Darktrace osSensor agents. Darktrace osSensors can be configured on virtual machines and containerized applications. Darktrace osSensors are available for Linux, Windows, and any system that can run the Docker Engine. 
 
-Darktrace vSensors support syslog ingestion to [integrate](https://www.darktrace.com/en/integrations/) with third-party security information and event management tools.
+Darktrace vSensors can also be configured to accept syslog feeds of third-party security information and event management tools.
 
-The deployment also supports sending data to vSensors from Darktrace osSensors you configure on virtual machines, containerized applications, and legacy EC2 instance types that do not support traffic mirroring. Darktrace osSensors are lightweight, host-based server agents that extend Darktrace's visibility into third-party cloud environments, including AWS and Microsoft Azure. Available for Linux, Windows, and any system that can run the Docker Engine, Darktrace osSensors are robust and resilient, allowing organizations to enhance visibility and deliver Darktrace DETECT and RESPOND capabilities in cloud environments, wherever they are hosted.
+Darktrace vSensors extract meta-data from the traffic sources and submit these to a connected Darktrace cloud service or physcial Darktrace deployment over port 443 (TLS). PCAP (packet capture) data is produced by the vSensor for forensic analysis. This is stored in an Amazon Simple Storage Service (Amazon S3) bucket.
+
+This guide covers the steps necessary to deploy this Quick Start.
+
 
 #### Architecture Diagram
 
@@ -51,17 +54,11 @@ This Quick Start terraform module provides the following deployment options:
 
 AWS System Manager Session Manager for access to the vSensors can be enabled in any of the deployments. This works independently from the bastion host deployed by the module, or any remote access provided outside the module. [Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html#capabilities-operations-management) provides secure and auditable edge device and instance management without needing to open inbound ports, maintain bastion hosts, or manage SSH keys.
 
-To minimise traffic costs, Cross-Zone Load Balancing is disabled by default. This will require at least one vSensor in each Availabily Zone with mirror traffic. There is an option to enable Cross-Zone Load Balancing (see input variable `cross_zone_load_balancing_enable` for details).
+To minimise traffic costs, Cross-Zone Load Balancing is disabled by default. This will require at least one vSensor in each Availabily Zone you need to monitor. There is an option to enable Cross-Zone Load Balancing (see input variable `cross_zone_load_balancing_enable` for details).
 
 #### Pre deployment steps
 
-##### Obtain a valid Darktrace update key
-
-This module requires a valid update key obtained from the [Darktrace Customer Portal](https://customerportal.darktrace.com/) or a Darktrace representative. A free 30-day trial is available. Contact your Darktrace representative or see [Start your free 30-day trial today](https://www.darktrace.com/en/trial/).
-
-1. Store the update key into the Systems Manager Parameter Store. You must provide the update key's Parameter name for the `update_key` variable.
-
-##### Register a push token
+##### Register a push token and obtain a Darktrace vSensor update key.
 
 Register a new push token to enable connection between vSensor probes and an existing Darktrace on-premise or cloud instance. All of the vSensor instances in one deployment should share the same push token.
 
@@ -71,15 +68,16 @@ Register a new push token to enable connection between vSensor probes and an exi
 
 3. Locate the "Push Probe Tokens" section. At the bottom of the list of probes is an field to create a new token. Enter a label for the vSensor deployment.
 
-4. Choose Add. A token is generated in the form of [label:string].
+4. Choose Add. You will need to record two variables from the resulting window. The vSensor Update Key (also found on the Darktrace customer portal) and the Push Token. The Push Token is only displayed once.
 
-5. Record the token, as it only displays once.
+5. In AWS Systems Manager (Parameter Store) create a new parameter with a unique name eg. `darktrace_vsensor_update_key` with type SecureString and the value of the vSensor Update Key obtained previously.
 
-6. Store the token into the Systems Manager Parameter Store. You must provide the token's Parameter name for the `push_token` variable.
+6. In AWS Systems Manager (Parameter Store) create a new parameter with a unique name, eg. `darktrace_push_token` with type SecureString and the value of the Push Token obtained previously. (Any additional Darktrace master deployments will require their own push token)
 
-If your Darktrace instance is behind a firewall, you must grant access to the instance to the IP addresses of your NAT Gateways after deployment.
 
-Note: Darktrace cloud instances are already configured to allow push token access, no firewall changes are necessary.
+If you have a physical Darktrace deployment behind a firewall, you must grant access to the instance to the IP addresses of your NAT Gateways after deployment.
+
+Note: Darktrace cloud offerings are already configured to allow Push Token access, no firewall changes are necessary.
 
 ##### Set osSensor shared HMAC secret key
 
@@ -87,8 +85,7 @@ The shared HMAC secret key between the osSensor and vSensor is optional for the 
 
 This can be done outside the module once the deployment has completed. More details on how to do it can be found in the [Requirements](https://customerportal.darktrace.com/product-guides/main/ossensor-docker-introduction) section in the osSensor product guide on the Darktrace Customer Portal. 
 
-1. Store the osSensor shared HMAC secret key into the Systems Manager Parameter Store. You can provide the HMAC's Parameter name for the `os_sensor_hmac_token` variable.
-
+1. In AWS Systems Manager (Parameter Store) create a new parameter with a unique name, eg. `os_sensor_hmac_token` with type SecureString and the value of the osSensor shared HMAC secret key obtained previously.
 
 ##### Terraform user policy
 
@@ -327,7 +324,7 @@ module "vsensors" {
 
 ##### Configure networking
 
-If your Darktrace Master instance is behind a firewall, you must grant access to the instance to the IP addresses of your NAT gateways. For a new VPC deployment, use the IP addresses in the `nat_gw_eip_public_ip` outputs. For an existing VPC deployment, use the IP addresses of the existing NAT gateways.
+If you have a physical Darktrace deployment behind a firewall, you must grant access to the instance to the IP addresses of your NAT gateways. For a new VPC deployment, use the IP addresses in the `nat_gw_eip_public_ip` outputs. For an existing VPC deployment, use the IP addresses of the existing NAT gateways.
 
 ##### Configure traffic mirroring
 

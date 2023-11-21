@@ -6,6 +6,7 @@ resource "aws_lb" "vsensor_lb" {
   internal                         = true
   subnets                          = local.vpc_private_subnets
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enable
+  dns_record_client_routing_policy = var.cross_zone_load_balancing_enable ? "any_availability_zone" : "availability_zone_affinity"
 
   enable_deletion_protection = false
 
@@ -49,4 +50,10 @@ resource "aws_lb_target_group" "vsensor_tg" {
   }
 
   tags = local.all_tags
+
+  #Terraform's default is false regardless of the target group protocol.
+  #According to AWS documentation, for UDP/TCP_UDP target groups the default is true. Otherwise, the default is false.
+  #https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#target-group-attributes
+  connection_termination = each.value.proto == "UDP" ? true : false
+
 }

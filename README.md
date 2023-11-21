@@ -100,7 +100,7 @@ If you use the module to create a new VPC the number of `availability_zone`, `pr
 ##### Deploy Darktrace vSensor into an existing VPC
 ```
 module "vsensors" {
-  source = "git::https://github.com/darktrace-com/terraform-aws-vsensor?ref=<version>"
+  source = "git::https://github.com/darktrace/terraform-aws-vsensor?ref=<version>"
 
   deployment_prefix = "dt"
 
@@ -118,7 +118,7 @@ module "vsensors" {
 
 ```
 module "vsensors" {
-  source = "git::https://github.com/darktrace-com/terraform-aws-vsensor?ref=<version>"
+  source = "git::https://github.com/darktrace/terraform-aws-vsensor?ref=<version>"
 
   deployment_prefix = "dt"
 
@@ -138,7 +138,7 @@ module "vsensors" {
 
 ```
 module "vsensors" {
-  source = "git::https://github.com/darktrace-com/terraform-aws-vsensor?ref=<version>"
+  source = "git::https://github.com/darktrace/terraform-aws-vsensor?ref=<version>"
 
   deployment_prefix = "dt"
 
@@ -181,13 +181,13 @@ module "vsensors" {
 | Name | Version|
 | ---  | ------ |
 | terraform | >=1.4.0 |
-| aws | >=5.0.0 |
+| aws | >=5.23.0 |
 
 #### Providers
 
 | Name | Version|
 | ---  | ------ |
-| aws | >=5.0.0 |
+| aws | >=5.23.0 |
 
 #### Resources
 
@@ -256,7 +256,7 @@ module "vsensors" {
 |bastion_ssh_cidrs|(Optional) Allowed CIDR blocks for SSH (Secure Shell) access to the bastion host.|list(any)|[]|Required if `bastion_enable-true`|
 |bastion_ssh_keyname|(Optional) Name of the ssh key pair stored in AWS. This key will be added to the remote access host (bastion) ssh configuration.|string|null|Required if `bastion_enable-true`|
 |cloudwatch_logs_days|Number of days to retain vSensor CloudWatch logs. Allowed values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, and 0. If you select 0, the events in the log group are always retained and never expire.|number|30|no|
-|cross_zone_load_balancing_enable|(Optional) Enable (true) or disable (false) cross-zone load balancing of the load balancer. If it is disabled, make sure there is **vSensor in each Availability Zone** with Mirror sources. For more information about cross-zone load balancing see the AWS documentation: [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#cross-zone-load-balancing), [Cross-zone load balancing for target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-cross-zone.html), and [Cross-zone load balancing](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing). Default is disable cross-zone load balancing.|bool|false|no|
+|cross_zone_load_balancing_enable|(Optional) Enable (true) or disable (false) cross-zone load balancing of the load balancer. If it is disabled, make sure there is **vSensor in each Availability Zone** with Mirror sources. This will also configure the NLB 'Client routing policy' to `any availability zone` when `cross_zone_load_balancing_enable = true`, or to `availability zone affinity` when `cross_zone_load_balancing_enable = false` For more information about cross-zone load balancing see the AWS documentation: [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#cross-zone-load-balancing), [Cross-zone load balancing for target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-cross-zone.html), [Cross-zone load balancing](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing), [Announcing new AWS Network Load Balancer (NLB) availability and performance capabilities](https://aws.amazon.com/about-aws/whats-new/2023/10/aws-nlb-availability-performance-capabilities/). Default is disable cross-zone load balancing.|bool|false|no|
 |cw_log_group_name|(Optional) CloudWatch Log Group name for the vSensor logs. [Naming restrictions](https://docs.aws.amazon.com/cli/latest/reference/logs/create-log-group.html#description) apply. If not provided the deployment ID (`deployment_id`) will be used.|string|empty|no|
 |cw_metrics_enable|(Optional) If true (default) a Custom Namespace for vSensor CloudWatch Metrics will be created.|bool|true|no|
 |cw_namespace|(Optional) CloudWatch Metrics Namespace for the vSensors (if `cw_metrics_enable = true`), for example vSensorMetrics. [Naming restrictions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html) apply. If not provided the deployment ID (`deployment_id`) will be used.|string|empty|no|

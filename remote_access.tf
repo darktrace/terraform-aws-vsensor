@@ -57,6 +57,10 @@ resource "aws_instance" "bastion" {
     encrypted             = true
   }
 
+  lifecycle {
+    ignore_changes = [ami]
+  }
+
   tags = merge(
     local.all_tags,
     {

@@ -18,18 +18,27 @@ resource "aws_iam_role" "vsensor_iam" {
 }
 
 data "aws_iam_policy_document" "vsensor_iam" {
-  statement {
-    sid       = "ListPCAPBucket"
-    effect    = "Allow"
-    actions   = ["s3:ListBucket", "s3:GetBucketLocation", "s3:GetLifecycleConfiguration"]
-    resources = [local.s3_list_bucket]
+
+  dynamic "statement" {
+    for_each = var.lifecycle_pcaps_s3_bucket != 0 ? [1] : []
+
+    content {
+      sid       = "ListPCAPBucket"
+      effect    = "Allow"
+      actions   = ["s3:ListBucket", "s3:GetBucketLocation", "s3:GetLifecycleConfiguration"]
+      resources = [local.s3_list_bucket]
+    }
   }
 
-  statement {
-    sid       = "AccessPCAPBucket"
-    effect    = "Allow"
-    actions   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:PutObjectTagging"]
-    resources = [local.s3_access_bucket]
+  dynamic "statement" {
+    for_each = var.lifecycle_pcaps_s3_bucket != 0 ? [1] : []
+
+    content {
+      sid       = "AccessPCAPBucket"
+      effect    = "Allow"
+      actions   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:PutObjectTagging"]
+      resources = [local.s3_access_bucket]
+    }
   }
 
   statement {

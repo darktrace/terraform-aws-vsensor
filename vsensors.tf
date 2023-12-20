@@ -46,7 +46,7 @@ resource "aws_launch_template" "vsensor" {
     instance_port        = var.instance_port
     vsensor_proxy        = var.proxy
     os_sensor_hmac_token = var.os_sensor_hmac_token
-    s3_pcaps_bucket      = aws_s3_bucket.vsensor_pcaps_s3.id
+    s3_pcaps_bucket      = var.lifecycle_pcaps_s3_bucket == 0 ? "" : aws_s3_bucket.vsensor_pcaps_s3[0].id
     cw_log_group         = aws_cloudwatch_log_group.vsensor_log_group.name
     cw_namespace         = local.cw_namespace
     cw_metrics_enable    = var.cw_metrics_enable

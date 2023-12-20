@@ -283,12 +283,12 @@ variable "filter_dest_cidr_block" {
 
 #Logs and captured packet retention
 variable "lifecycle_pcaps_s3_bucket" {
-  description = "Number of days to retain captured packets in Amazon S3."
+  description = "Number of days to retain captured packets in Amazon S3. Longer retention will increase storage costs. Set to 0 to disable PCAP storage."
   type        = number
   default     = 7
 
   validation {
-    condition     = floor(var.lifecycle_pcaps_s3_bucket) == var.lifecycle_pcaps_s3_bucket
+    condition     = floor(var.lifecycle_pcaps_s3_bucket) == var.lifecycle_pcaps_s3_bucket && var.lifecycle_pcaps_s3_bucket >= 0
     error_message = "The number of days to retain captured packets in Amazon S3 must be a whole number."
   }
 }

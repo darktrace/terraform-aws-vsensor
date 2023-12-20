@@ -22,8 +22,8 @@ data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  s3_list_bucket   = join("", ["arn:", data.aws_partition.current.partition, ":s3:::", aws_s3_bucket.vsensor_pcaps_s3.id])
-  s3_access_bucket = join("", [local.s3_list_bucket, "/*"])
+  s3_list_bucket   = var.lifecycle_pcaps_s3_bucket == 0 ? null : join("", ["arn:", data.aws_partition.current.partition, ":s3:::", aws_s3_bucket.vsensor_pcaps_s3[0].id])
+  s3_access_bucket = var.lifecycle_pcaps_s3_bucket == 0 ? null : join("", [local.s3_list_bucket, "/*"])
 }
 
 data "aws_vpc" "vsensors_asg" {

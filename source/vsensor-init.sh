@@ -15,6 +15,8 @@ exec > >(tee -a /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>
 
 trap exittrap EXIT
 
+date
+
 apt-get update
 
 apt-get install -y awscli
@@ -203,7 +205,11 @@ set_pushtoken.sh "$push_token" ${instance_host_name}:${instance_port} ${vsensor_
 
 set_ephemeral.sh 1
 
-set_pcap_s3_bucket.sh ${s3_pcaps_bucket}
+if [ -n "${s3_pcaps_bucket}" ]; then
+  set_pcap_s3_bucket.sh ${s3_pcaps_bucket}
+else
+  set_pcap_size.sh 0
+fi
 
 if [ -n "${os_sensor_hmac_token}" ]; then
   os_sensor_hmac_token=$(aws ssm get-parameter --name ${os_sensor_hmac_token} --with-decryption --query "Parameter.Value" --output text --region ${vsensor_region})

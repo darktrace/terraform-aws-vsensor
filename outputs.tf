@@ -43,12 +43,12 @@ output "vsensor_lb_target_group_name" {
 
 # S3 PCAPs
 output "pcaps_s3_bucket_name" {
-  value       = aws_s3_bucket.vsensor_pcaps_s3.id
+  value       = var.lifecycle_pcaps_s3_bucket == 0 ? null : aws_s3_bucket.vsensor_pcaps_s3[0].id
   description = "The name of the s3 bucket that stores the PCAPs."
 }
 
 output "pcaps_s3_bucket_domain_name" {
-  value       = aws_s3_bucket.vsensor_pcaps_s3.bucket_domain_name
+  value       = var.lifecycle_pcaps_s3_bucket == 0 ? null : aws_s3_bucket.vsensor_pcaps_s3[0].bucket_domain_name
   description = "The s3 bucket's domain name."
 }
 

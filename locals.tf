@@ -51,4 +51,6 @@ locals {
   #Validate the number of AZs matches the number of Private and Public CIDRs provided for new VPC
   az_vs_private = local.vpc_enable ? zipmap(local.availability_zone, local.private_cidrs) : zipmap([""], [""])
   az_vs_public  = local.vpc_enable ? zipmap(local.availability_zone, local.public_cidrs) : zipmap([""], [""])
+
+  s3_count = var.lifecycle_pcaps_s3_bucket == 0 ? 0 : 1
 }

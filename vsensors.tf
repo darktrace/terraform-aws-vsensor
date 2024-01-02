@@ -38,6 +38,11 @@ resource "aws_launch_template" "vsensor" {
 
   key_name = var.ssh_keyname
 
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
   user_data = base64encode(templatefile("${path.module}/source/vsensor-init.sh", {
     vsensor_region       = data.aws_region.current.name
     update_key           = var.update_key

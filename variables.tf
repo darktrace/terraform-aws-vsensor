@@ -98,8 +98,8 @@ variable "proxy" {
   default     = ""
 
   validation {
-    condition     = var.proxy == "" || can(regex("^http://.+:.+@.+:[0-9]+$", var.proxy))
-    error_message = "Invalid proxy - the proxy should be specified in the format http://user:pass@hostname:port."
+    condition     = var.proxy == "" || can(regex("^http://.+:[0-9]+$", var.proxy)) || can(regex("^http://.+:.+@.+:[0-9]+$", var.proxy))
+    error_message = "Invalid proxy - the proxy should be specified in the format http://hostname:port with no authentication, or http://user:pass@hostname:port with authentication."
   }
 }
 

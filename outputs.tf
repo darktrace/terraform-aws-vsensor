@@ -1,6 +1,8 @@
 output "deployment_id" {
   value       = local.deployment_id
-  description = "The unique deployment ID."
+  description = <<EOT
+  The unique deployment ID. This is a combination of the `deployment_prefix` (as prefix) followed by a hyphen (-) and an eleven character random string.
+  EOT
 }
 
 # Load Balancer
@@ -16,7 +18,7 @@ output "vsensor_lb_arn_suffix" {
 
 output "vsensor_lb_dns_name" {
   value       = aws_lb.vsensor_lb.dns_name
-  description = "The DNS name of the load balancer."
+  description = "The DNS name of the load balancer. Use this as the vSensorIP for connecting osSensors."
 }
 
 # Load Balancer Listener
@@ -86,12 +88,12 @@ output "traffic_mirror_filter_id" {
 
 output "launch_template_vsensor_name" {
   value       = aws_launch_template.vsensor.name
-  description = "The name of the launch template."
+  description = "The name of the launch template (vSensors)."
 }
 
 output "launch_template_vsensor_arn" {
   value       = aws_launch_template.vsensor.arn
-  description = "The ARN of the launch template."
+  description = "The ARN of the launch template (vSensors)."
 }
 
 output "autoscaling_group_vsensors_asg_name" {
@@ -102,43 +104,43 @@ output "autoscaling_group_vsensors_asg_name" {
 # new VPC
 output "vpc_id" {
   value       = local.vpc_enable ? aws_vpc.main[0].id : null
-  description = "The ID of the new VPC."
+  description = "The ID of the new VPC (if `vpc_enable = true`)"
 }
 
 output "private_subnets_id" {
   value       = { for k, v in aws_subnet.private : k => v.id }
-  description = "If vpc_enable = true - a list of the new private subnets."
+  description = "If `vpc_enable = true` - a list of the new private subnets."
 }
 
 output "public_subnets_id" {
   value       = { for k, v in aws_subnet.public : k => v.id }
-  description = "If vpc_enable = true - a list of the new public subnets."
+  description = "If `vpc_enable = true` - a list of the new public subnets."
 }
 
 output "ssh_remote_access_ip" {
   value       = local.bastion_enable ? aws_eip.remote_access_eip[0].public_ip : null
-  description = "The public IP for the ssh remote access."
+  description = "If `bastion_enable=true` - The public IP address of the Bastion host (for the ssh remote access)."
 }
 
 output "nat_gw_eip_public_ip" {
   value       = { for k, v in aws_eip.vsensor_nat_gw_eip : k => v.public_ip }
-  description = "If vpc_enable = true - a list of the public IP addresses fo the NAT gateways."
+  description = "If `vpc_enable = true` - a list of the public IP addresses for the NAT gateways."
 }
 
 # Cloudwatch
 output "vsensor_cloudwatch_log_group_arn" {
   value       = aws_cloudwatch_log_group.vsensor_log_group.arn
-  description = "The CloudWatch group ARN."
+  description = "The ARN of the vSensor CloudWatch group."
 }
 
 output "vsensor_cloudwatch_log_group_name" {
   value       = aws_cloudwatch_log_group.vsensor_log_group.name
-  description = "The CloudWatch group name."
+  description = "The name of the vSensor CloudWatch group."
 }
 
 output "kms_key_vsensor_logs_arn" {
   value       = var.kms_key_enable ? aws_kms_key.vsensor_logs[0].arn : null
-  description = "The new kms key."
+  description = "If new kms key - the ARN of the kms key."
 }
 
 # SSM Session Manager

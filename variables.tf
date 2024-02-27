@@ -1,8 +1,7 @@
 #Deployment configuration
 variable "deployment_prefix" {
   type        = string
-  description = "Two lowercase alphabet characters that will be used to create deployment ID and resource names."
-  default     = ""
+  description = "(Forces re-creating all resources) Two letter (lowercase) prefix that will be used to create a unique deployment ID to identify the resources."
 
   validation {
     condition     = length(var.deployment_prefix) == 2 && can(regex("^[a-z]+$", var.deployment_prefix))
@@ -12,7 +11,11 @@ variable "deployment_prefix" {
 
 variable "tags" {
   type        = map(string)
-  description = "Tags for all resources."
+  description = <<EOT
+  Tags for all resources (where possible). By default the module adds two tags to all resources (where possibe) with keys "deployment_id" and "dt_product".
+  The value for the "deployment_id" key is the `deployment_id` (see the Outputs for more details).
+  The value for "dt_product" is "vsensor". If you provide a tag with a key any of those it will overwrite the default.
+  EOT
   default     = {}
 }
 
@@ -20,7 +23,6 @@ variable "tags" {
 variable "instance_host_name" {
   type        = string
   description = "Host name of the Darktrace Master instance."
-  default     = null
 }
 
 variable "instance_port" {
@@ -32,11 +34,12 @@ variable "instance_port" {
 variable "push_token" {
   type        = string
   description = <<EOT
-  Name of parameter in the SSM Parameter Store that stores the push token. 
-  The push token is used to authenticate with the Darktrace Master instance.
-  For more information, see the Darktrace Customer Portal (https://customerportal.darktrace.com/login)."
+  Name of parameter in the SSM Parameter Store that stores the push token generated on the Darktrace Master instance.
+  The [parameter names](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html) can consist of alphanumeric characters (0-9A-Za-z),
+  period (.), hyphen (-), and underscore (_). In addition, the slash forward character (/) is used to delineate hierarchies in parameter names.
+  The push token is used to authenticate with the Darktrace Master instance. For more information, see the Darktrace Customer Portal (https://customerportal.darktrace.com/login).
+  **Note**: for security reasons the push token should be stored in SSM Parameter Store and the name of the parameter is passed to the installation script via terraform.
   EOT
-  default     = ""
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9-_/.]+$", var.push_token))
@@ -51,7 +54,7 @@ variable "push_token" {
 #Darktrace vSensor configuration
 variable "instance_type" {
   type        = string
-  description = "EC2 instance type."
+  description = "The instance type for the vSensors. This can be one of t3.medium, m5.large, m5.2xlarge, m5.4xla."
   default     = "t3.medium"
 
   validation {
@@ -73,14 +76,22 @@ variable "ssh_keyname" {
 
 variable "ssh_cidrs" {
   type        = list(any)
-  description = "Allowed CIDR blocks for SSH (Secure Shell) access to vSensor."
+  description = <<EOT
+  (Optional) Allowed CIDR blocks for SSH (Secure Shell) access to vSensor. If not provided, the vSensors will not be accessible on port 22/tcp (ssh).
+  An example when such access won't be required is when it is desired the vSensors to be accessible only via SSM session.
+  EOT
   default     = null
 }
 
 variable "update_key" {
   type        = string
-  description = "Name of parameter that stores the Darktrace update key in the SSM Parameter Store. If you don't have one, contact your Darktrace representative."
-  default     = ""
+  description = <<EOT
+  Name of parameter that stores the Darktrace update key in the SSM Parameter Store.
+  The [parameter names](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html) can consist of alphanumeric characters (0-9A-Za-z),
+  period (.), hyphen (-), and underscore (_). In addition, the slash forward character (/) is used to delineate hierarchies in parameter names.
+  If you don't have Darktrace update key, you can obtain it from the Darktrace customer portal.
+  **Note**: for security reasons the update key should be stored in SSM Parameter Store and the name of the parameter is passed to the installation script via terraform.
+  EOT
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9-_/.]+$", var.update_key))
@@ -94,7 +105,10 @@ variable "update_key" {
 
 variable "proxy" {
   type        = string
-  description = "(Optional) A proxy that should be specified in the format http://user:pass@hostname:port."
+  description = <<EOT
+  (Optional) A proxy if it is required for the vSensor to access the Darktrace Master instance.
+  It should be specified in the format http://hostname:port with no authentication, or http://user:pass@hostname:port with authentication.
+  EOT
   default     = ""
 
   validation {
@@ -112,8 +126,7 @@ variable "desired_capacity" {
 variable "min_size" {
   type        = number
   description = <<EOT
-  Minimum number of vSensor instances in the Auto-Scaling group. 
-  Recomended number is not to be less than the number of Availability Zone where the vSensors will be deployed into.
+  Minimum number of vSensor instances in the Auto-Scaling group. Recomended number is not to be less than the number of Availability Zone where the vSensors will be deployed into.
   EOT
   default     = 2
 }
@@ -126,7 +139,12 @@ variable "max_size" {
 
 variable "os_sensor_hmac_token" {
   type        = string
-  description = "Name of the SSM Parameter Store parameter that stores the hash-based message authentication code (HMAC) token to authenticate osSensors with vSensor."
+  description = <<EOT
+  (Optional) Name of the SSM Parameter Store parameter that stores the hash-based message authentication code (HMAC) token to authenticate osSensors with vSensor.
+  The [parameter names](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html) can consist of alphanumeric characters (0-9A-Za-z),
+  period (.), hyphen (-), and underscore (_). In addition, the slash forward character (/) is used to delineate hierarchies in parameter names.
+  **Note**: for security reasons the HMAC should be stored in SSM Parameter Store and the name of the parameter is passed to the installation script via terraform.
+  EOT
   default     = ""
 
   validation {
@@ -142,11 +160,12 @@ variable "os_sensor_hmac_token" {
 variable "ssm_session_enable" {
   type        = bool
   description = <<EOT
-  Enable or disable AWS System Manager Session Manager for the vSensors. Default is enable.
+  Enable AWS System Manager Session Manager for the vSensors. Default is enable.
   When connecting via the AWS Systems Manager Session Manager it is recommended to use the session/preferences document created by the module.
   This will make sure that the session is encrypted and logged (in the same CloudWatch Log group as the vSensors logs).
   That is the same kms key that is used for encrypting log data in CloudWatch Logs.
-  For the Systems Manager Session Manager allowed users you can [Enforce a session document permission check for the AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/getting-started-sessiondocumentaccesscheck.html).
+  For the Systems Manager Session Manager allowed users you can
+  [Enforce a session document permission check for the AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/getting-started-sessiondocumentaccesscheck.html).
   The name of the session/preferences document is in the Outputs (`session_manager_preferences_name`).
   Example: `aws ssm start-session --target <instance_id> --document-name <session_manager_preferences_name>`.
   EOT
@@ -162,7 +181,17 @@ variable "ssm_session_enable" {
 #Load Balancing
 variable "cross_zone_load_balancing_enable" {
   type        = bool
-  description = "Enable or disable (default) cross-zone load balancing."
+  description = <<EOT
+  (Optional) Enable (true) or disable (false) cross-zone load balancing of the load balancer.
+  If it is disabled, make sure there is **at least one** vSensor in each Availability Zone with Mirror sources.
+  This will also configure the NLB 'Client routing policy' to `any availability zone` when `cross_zone_load_balancing_enable = true`,
+  or to `availability zone affinity` when `cross_zone_load_balancing_enable = false`.
+  For more information about cross-zone load balancing see the AWS documentation: [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#cross-zone-load-balancing),
+  [Cross-zone load balancing for target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-cross-zone.html),
+  [Cross-zone load balancing](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing),
+  [Announcing new AWS Network Load Balancer (NLB) availability and performance capabilities](https://aws.amazon.com/about-aws/whats-new/2023/10/aws-nlb-availability-performance-capabilities/).
+  Default is disable cross-zone load balancing.
+  EOT
   default     = false
 
   validation {
@@ -174,21 +203,28 @@ variable "cross_zone_load_balancing_enable" {
 #Network configuration existing VPC
 variable "vpc_id" {
   type        = string
-  description = "VPC ID of target deployment."
+  description = <<EOT
+  When Darktrace vSensor is deployed into an existing VPC this is the **VPC ID** of target deployment.
+  Required if you are deploying the Darktrace vSensor into an existing VPC.
+  EOT
   default     = null
 }
 
 variable "vpc_private_subnets" {
   type        = list(any)
-  description = "List of the Subnet IDs that the vSensors should be launched into. You can specify at most one subnet per Availability Zone. Minimum two Subnets are required."
+  description = <<EOT
+  When Darktrace vSensor is deployed into an existing VPC this is the list of the **Subnet IDs** that the vSensors should be launched into.
+  You can specify at most one subnet per Availability Zone. Minimum one Subnet is required.
+  Required if you are deploying the Darktrace vSensor into an existing VPC.
+  EOT
   default     = []
 
   validation {
     condition = alltrue([
       for pri_sub_id in var.vpc_private_subnets :
-      pri_sub_id == [] || pri_sub_id != [] && length(var.vpc_private_subnets) >= 2
+      pri_sub_id == [] || pri_sub_id != [] && length(var.vpc_private_subnets) >= 1
     ])
-    error_message = "Minimum two Subnets are required."
+    error_message = "Minimum one Subnet is required."
 
   }
 }
@@ -196,13 +232,16 @@ variable "vpc_private_subnets" {
 #Network configuration new VPC
 variable "vpc_enable" {
   type        = bool
-  description = "If `true` will create a new VPC."
+  description = <<EOT
+  (Optional) If **true** a new VPC will be created with the provided `vpc_cidr`, `availability_zone`, `private_subnets_cidrs`,
+  `public_subnets_cidrs` **regardless** of if the input variables for an existing VPC are also provided (i.e. `vpc_id` and `vpc_private_subnets`).
+  EOT
   default     = false
 }
 
 variable "vpc_cidr" {
   type        = string
-  description = "The IPv4 CIDR blobk for the VPC. Default 10.0.0.0/16."
+  description = "CIDR for the new VPC that will be created if `vpc_enable = true`"
   default     = "10.0.0.0/16"
 
   validation {
@@ -213,24 +252,28 @@ variable "vpc_cidr" {
 
 variable "availability_zone" {
   type        = list(string)
-  description = "Availability Zones to deploy the vSensors. At least two availablity zones are required."
+  description = <<EOT
+  If `vpc_enable = true` - Availability Zones that the vSensors, the NAT Gateways and all resources will be deployed into.
+  EOT
   default     = ["us-east-1a", "us-east-1b"]
 
   validation {
-    condition     = length(var.availability_zone) >= 2
-    error_message = "The number of availability zones must be at least two."
+    condition     = length(var.availability_zone) >= 1
+    error_message = "The number of availability zones must be at least one."
   }
 
 }
 
 variable "private_subnets_cidrs" {
   type        = list(string)
-  description = "Private CIDR blocks  to deploy the vSensors. Default 10.0.0.0/19, 10.0.32.0/19."
+  description = <<EOT
+  If `vpc_enable = true` - CIDRs for the private subnets that will be created for the vSensors.
+  EOT
   default     = ["10.0.0.0/19", "10.0.32.0/19"]
 
   validation {
-    condition     = length(var.private_subnets_cidrs) >= 2
-    error_message = "The number of Private CIDR blocks must be at least two."
+    condition     = length(var.private_subnets_cidrs) >= 1
+    error_message = "The number of Private CIDR blocks must be at least one."
   }
 
   validation {
@@ -245,12 +288,14 @@ variable "private_subnets_cidrs" {
 
 variable "public_subnets_cidrs" {
   type        = list(string)
-  description = "Public CIDR block to deploy the NAT Gateways. Default 10.0.128.0/20, 10.0.144.0/20."
+  description = <<EOT
+  If `vpc_enable = true` - CIDRs for the public subnets that will be created for the NAT Gateways.
+  EOT
   default     = ["10.0.128.0/20", "10.0.144.0/20"]
 
   validation {
-    condition     = length(var.public_subnets_cidrs) >= 2
-    error_message = "The number of Public CIDR blocks must be at least two."
+    condition     = length(var.public_subnets_cidrs) >= 1
+    error_message = "The number of Public CIDR blocks must be at least one."
   }
 
   validation {
@@ -296,12 +341,16 @@ variable "lifecycle_pcaps_s3_bucket" {
 #Bastion
 variable "bastion_enable" {
   type        = bool
-  description = "If `true` will create a public Bastion."
+  description = <<EOT
+  If `true` will create a public Bastion.
+  (Optional; applicable only if `vpc_enable = true`) If **true** a standalone/single bastion host will be installed to provide ssh remote access to the vSensors.
+  It will be installed in the first Public subnet CIDR (`public_subnets_cidrs`). The bastion will automatically have ssh access to the vSensors.
+  EOT
   default     = false
 }
 
 variable "bastion_instance_type" {
-  description = "EC2 instance type for the Bastion."
+  description = "(Optional) The ec2 instance type for the bastion host. This can be one of t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge."
   type        = string
   default     = "t3.micro"
 
@@ -312,19 +361,25 @@ variable "bastion_instance_type" {
 }
 
 variable "bastion_ssh_keyname" {
-  description = "Name of the ssh key pair stored in AWS. This key will be added to the Bastion ssh configuration."
+  description = <<EOT
+  (Optional) Name of the ssh key pair stored in AWS. This key will be added to the vSensor ssh configuration.
+  Use case to not provide ssh key pair name - when it is desirable the access to vSensors to be via AWS System Manager Session only (see ssm_session_enable).
+  EOT
   type        = string
   default     = null
 }
 
 variable "bastion_ssh_cidrs" {
-  description = "Allowed CIDR block for SSH (Secure Shell) access to the Bastion."
+  description = "(Optional) Allowed CIDR blocks for SSH (Secure Shell) access to the bastion host."
   type        = list(any)
   default     = []
 }
 
 variable "bastion_ami" {
-  description = "Linux distribution for the Amazon Machine Image (AMI) used for the bastion host instances."
+  description = <<EOT
+  (Optional) The AMI operating system for the bastion host. This can be one of Amazon-Linux2-HVM, Ubuntu-Server-20_04-LTS-HVM.
+  Default user names: for Amazon-Linux2-HVM the user name is `ec2-user`, for Ubuntu-Server-20_04-LTS-HVM the user name is `ubuntu`.
+  EOT
   type        = string
   default     = "Amazon-Linux2-HVM"
 
@@ -335,7 +390,11 @@ variable "bastion_ami" {
 }
 
 variable "cloudwatch_logs_days" {
-  description = "Number of days to retain Cloudwatch logs."
+  description = <<EOT
+  Number of days to retain vSensor CloudWatch logs. 
+  Allowed values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, and 0.
+  If you select 0, the events in the log group are always retained and never expire.
+  EOT
   type        = number
   default     = 30
 
@@ -346,7 +405,11 @@ variable "cloudwatch_logs_days" {
 }
 
 variable "cw_log_group_name" {
-  description = "CloudWatch Log Group name for the vSensor logs. The default is to use the deployment ID (deployment_id). Details regarding deployment_id can be found in the README."
+  description = <<EOT
+  (Optional) CloudWatch Log Group name for the vSensor logs.
+  [Naming restrictions](https://docs.aws.amazon.com/cli/latest/reference/logs/create-log-group.html#description) apply.
+  If not provided the deployment ID (`deployment_id`) will be used.
+  EOT
   type        = string
   default     = ""
 
@@ -361,7 +424,11 @@ variable "cw_log_group_name" {
 }
 
 variable "cw_namespace" {
-  description = "CloudWatch metrics Namespace for the vSensors, for example vSensorMetrics. If not provided the deployment ID (deployment_id) will be used. Details regarding deployment_id can be found in the README."
+  description = <<EOT
+  (Optional) CloudWatch Metrics Namespace for the vSensors (if `cw_metrics_enable = true`), for example vSensorMetrics.
+  [Naming restrictions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html) apply.
+  If not provided the deployment ID (`deployment_id`) will be used.
+  EOT
   type        = string
   default     = ""
 
@@ -378,7 +445,7 @@ variable "cw_namespace" {
 
 variable "cw_metrics_enable" {
   type        = bool
-  description = "Enable (true) or disable vSensor CloudWatch Metrics Custom namespace."
+  description = "(Optional) If true (default) a Custom Namespace for vSensor CloudWatch Metrics will be created."
   default     = true
 
   validation {
@@ -389,7 +456,7 @@ variable "cw_metrics_enable" {
 
 variable "kms_key_enable" {
   type        = bool
-  description = "If true (default) the module will create a new kms key for encrypting log data in CloudWatch Logs. If false, kms_key_arn should be provided."
+  description = "If true (default) the module will create a new kms key for encrypting log data in CloudWatch Logs. If false, `kms_key_arn` should be provided."
   default     = true
 
   validation {
@@ -400,7 +467,11 @@ variable "kms_key_enable" {
 
 variable "kms_key_arn" {
   type        = string
-  description = "ARN of the kms key for encrypting log data in CloudWatch Logs. If kms_key_enable is true then this kms key arn will be ignored."
+  description = <<EOT
+  ARN of the kms key for encrypting log data in CloudWatch Logs. This is when the kms key is created outside the module.
+  The key policy should allow log encryption see [AWS documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html).
+  If `kms_key_enable` is true then this kms key arn will be ignored.
+  EOT
   default     = null
 }
 
@@ -411,6 +482,6 @@ variable "kms_key_rotation" {
 
   validation {
     condition     = contains([true, false], var.kms_key_rotation)
-    error_message = "cw_metrics_enable can be either true or false."
+    error_message = "kms_key_rotation can be either true or false."
   }
 }

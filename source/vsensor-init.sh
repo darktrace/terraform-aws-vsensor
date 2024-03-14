@@ -16,11 +16,12 @@ exec > >(tee -a /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>
 trap exittrap EXIT
 
 date
+apt-get -o DPkg::Lock::Timeout=240 update
 
-apt-get update
+date
+apt-get -o DPkg::Lock::Timeout=240 install -y awscli
 
-apt-get install -y awscli
-
+date
 ###AmazonCloudWatch
 wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 

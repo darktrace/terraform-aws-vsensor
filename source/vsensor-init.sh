@@ -19,7 +19,7 @@ date
 apt-get -o DPkg::Lock::Timeout=240 update
 
 date
-apt-get -o DPkg::Lock::Timeout=240 install -y awscli
+snap install aws-cli --classic
 
 date
 ###AmazonCloudWatch

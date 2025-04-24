@@ -22,18 +22,14 @@ locals {
 #
 
 resource "aws_launch_template" "vsensor" {
-  name          = "${local.deployment_id}-vsensor-${local.instance_version}"
-  description   = "vSensor Launch Template"
-  image_id      = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
+  name                   = "${local.deployment_id}-vsensor-${local.instance_version}"
+  description            = "vSensor Launch Template"
+  image_id               = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = [aws_security_group.vsensors_asg_sg.id]
 
   iam_instance_profile {
     name = aws_iam_instance_profile.vsensor.name
-  }
-
-  network_interfaces {
-    associate_public_ip_address = false
-    security_groups             = [aws_security_group.vsensors_asg_sg.id]
   }
 
   key_name = var.ssh_keyname

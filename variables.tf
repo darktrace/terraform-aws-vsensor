@@ -377,15 +377,15 @@ variable "bastion_ssh_cidrs" {
 
 variable "bastion_ami" {
   description = <<EOT
-  (Optional) The AMI operating system for the bastion host. This can be one of Amazon-Linux2-HVM, Ubuntu-Server-20_04-LTS-HVM.
-  Default user names: for Amazon-Linux2-HVM the user name is `ec2-user`, for Ubuntu-Server-20_04-LTS-HVM the user name is `ubuntu`.
+  (Optional) The AMI operating system for the bastion host. This can be one of Amazon-Linux2023-HVM, Ubuntu-Server-24_04-LTS-HVM.
+  Default user names: for Amazon-Linux2023-HVM the user name is `ec2-user`, for Ubuntu-Server-24_04-LTS-HVM the user name is `ubuntu`.
   EOT
   type        = string
-  default     = "Amazon-Linux2-HVM"
+  default     = "Amazon-Linux2023-HVM"
 
   validation {
-    condition     = contains(["Amazon-Linux2-HVM", "Ubuntu-Server-20_04-LTS-HVM"], var.bastion_ami)
-    error_message = "The instance_type can be one of Amazon-Linux2-HVM, Ubuntu-Server-20_04-LTS-HVM."
+    condition     = contains(["Amazon-Linux2023-HVM", "Ubuntu-Server-24_04-LTS-HVM"], var.bastion_ami)
+    error_message = "The instance_type can be one of Amazon-Linux2023-HVM, Ubuntu-Server-24_04-LTS-HVM."
   }
 }
 

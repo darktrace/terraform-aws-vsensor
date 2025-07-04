@@ -1,16 +1,16 @@
-data "aws_ami" "bastion_amazon_linux_2" {
+data "aws_ami" "bastion_amazon_linux_2023" {
   most_recent = true
 
 
   filter {
-    name   = "owner-alias"
-    values = ["amazon"]
+    name   = "owner-id"
+    values = ["137112412989"] # amazon
   }
 
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*"]
+    values = ["al2023-ami-*"]
   }
 }
 
@@ -27,13 +27,16 @@ data "aws_ami" "bastion_ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] # Canonical
+  filter {
+    name   = "owner-id"
+    values = ["099720109477"] # Canonical
+  }
 }
 
 locals {
   bastion_ami_id = tomap({
-    Amazon-Linux2-HVM           = data.aws_ami.bastion_amazon_linux_2.id
-    Ubuntu-Server-20_04-LTS-HVM = data.aws_ami.bastion_ubuntu.id
+    Amazon-Linux2023-HVM        = data.aws_ami.bastion_amazon_linux_2023.id
+    Ubuntu-Server-24_04-LTS-HVM = data.aws_ami.bastion_ubuntu.id
   })
 }
 

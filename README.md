@@ -165,7 +165,7 @@ module "vsensors" {
 
   bastion_enable        = true
   bastion_instance_type = "t3.micro"
-  bastion_ami           = "Ubuntu-Server-20_04-LTS-HVM"
+  bastion_ami           = "Ubuntu-Server-24_04-LTS-HVM"
   bastion_ssh_keyname   = "sshkey-XXXYYY"
   bastion_ssh_cidrs     = ["35.180.11.224/27"]
   tags = {
@@ -265,7 +265,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_availability_zone"></a> [availability\_zone](#input\_availability\_zone) | If `vpc_enable = true` - Availability Zones that the vSensors, the NAT Gateways and all resources will be deployed into. | `list(string)` | <pre>[<br>  "us-east-1a",<br>  "us-east-1b"<br>]</pre> | no |
-| <a name="input_bastion_ami"></a> [bastion\_ami](#input\_bastion\_ami) | (Optional) The AMI operating system for the bastion host. This can be one of Amazon-Linux2-HVM, Ubuntu-Server-20\_04-LTS-HVM.<br>  Default user names: for Amazon-Linux2-HVM the user name is `ec2-user`, for Ubuntu-Server-20\_04-LTS-HVM the user name is `ubuntu`. | `string` | `"Amazon-Linux2-HVM"` | no |
+| <a name="input_bastion_ami"></a> [bastion\_ami](#input\_bastion\_ami) | (Optional) The AMI operating system for the bastion host. This can be one of Amazon-Linux2023-HVM, Ubuntu-Server-24\_04-LTS-HVM.<br>  Default user names: for Amazon-Linux2023-HVM the user name is `ec2-user`, for Ubuntu-Server-24\_04-LTS-HVM the user name is `ubuntu`. | `string` | `"Amazon-Linux2023-HVM"` | no |
 | <a name="input_bastion_enable"></a> [bastion\_enable](#input\_bastion\_enable) | If `true` will create a public Bastion.<br>  (Optional; applicable only if `vpc_enable = true`) If **true** a standalone/single bastion host will be installed to provide ssh remote access to the vSensors.<br>  It will be installed in the first Public subnet CIDR (`public_subnets_cidrs`). The bastion will automatically have ssh access to the vSensors. | `bool` | `false` | no |
 | <a name="input_bastion_instance_type"></a> [bastion\_instance\_type](#input\_bastion\_instance\_type) | (Optional) The ec2 instance type for the bastion host. This can be one of t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge. | `string` | `"t3.micro"` | no |
 | <a name="input_bastion_ssh_cidrs"></a> [bastion\_ssh\_cidrs](#input\_bastion\_ssh\_cidrs) | (Optional) Allowed CIDR blocks for SSH (Secure Shell) access to the bastion host. | `list(any)` | `[]` | no |

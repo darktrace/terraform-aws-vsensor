@@ -59,7 +59,7 @@ variable "instance_type" {
 
   validation {
     condition     = contains(["t3.medium", "m5.large", "m6i.large", "m7i.large", "m5.xlarge", "m6i.xlarge", "m7i.xlarge", "m5.2xlarge", "m6i.2xlarge", "m6i.2xlarge", "m5.4xlarge", "m6i.4xlarge", "m7i.4xlarge"], var.instance_type)
-    error_message = "The instance_type can be one of t3.medium, m5.large, m5.2xlarge, m5.4xlarge."
+    error_message = "The instance_type can be one of t3.medium, m5.large, m6i.large, m7i.large, m5.xlarge, m6i.xlarge, m7i.xlarge, m5.2xlarge, m6i.2xlarge, m6i.2xlarge, m5.4xlarge, m6i.4xlarge, or m7i.4xlarge."
   }
 }
 

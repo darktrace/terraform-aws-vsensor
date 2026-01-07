@@ -39,6 +39,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "vsensor_pcaps_s3" {
   rule {
     id = "delete-after-${var.lifecycle_pcaps_s3_bucket}-days"
 
+    filter {}
+
     expiration {
       days = var.lifecycle_pcaps_s3_bucket
     }

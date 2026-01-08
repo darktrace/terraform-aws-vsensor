@@ -141,7 +141,7 @@ data "aws_iam_policy_document" "vsensor_iam" {
       sid       = "SsmLog"
       effect    = "Allow"
       actions   = ["logs:DescribeLogGroups"]
-      resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"]
+      resources = ["arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"]
     }
   }
 }

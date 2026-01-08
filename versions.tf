@@ -1,11 +1,11 @@
 terraform {
-  required_version = ">= 1.4"
+  required_version = "~> 1.12"
   required_providers {
     aws = {
-      version = ">= 5.23"
+      version = "~> 6.0"
     }
     random = {
-      version = ">= 3.5"
+      version = "~> 3.7"
     }
   }
 }

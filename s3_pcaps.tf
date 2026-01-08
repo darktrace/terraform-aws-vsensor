@@ -37,6 +37,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "vsensor_pcaps_s3" {
   bucket = aws_s3_bucket.vsensor_pcaps_s3[0].id
 
   rule {
+
     id = "delete-after-${var.lifecycle_pcaps_s3_bucket}-days"
 
     filter {}

@@ -44,7 +44,7 @@ resource "aws_launch_template" "vsensor" {
   }
 
   user_data = base64encode(templatefile("${path.module}/source/vsensor-init.sh", {
-    vsensor_region       = data.aws_region.current.name
+    vsensor_region       = data.aws_region.current.region
     update_key           = var.update_key
     push_token           = var.push_token
     instance_host_name   = var.instance_host_name

@@ -1,12 +1,10 @@
 data "aws_ami" "bastion_amazon_linux_2023" {
   most_recent = true
 
-
   filter {
     name   = "owner-id"
     values = ["137112412989"] # amazon
   }
-
 
   filter {
     name   = "name"
@@ -49,6 +47,8 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.bastion_sg[0].id]
 
   key_name = var.bastion_ssh_keyname
+
+  monitoring = true # SAST: EC2 Instance Monitoring Disabled
 
   # kics-scan ignore-line
   associate_public_ip_address = true # required for the jump host; Security Group will limit the inbound to tcp/22
@@ -110,6 +110,8 @@ resource "aws_security_group" "bastion_sg" {
 }
 
 resource "aws_security_group_rule" "bastion_to_any" {
+  description = "Bastion to Any"
+
   count = local.bastion_enable ? 1 : 0
 
   type              = "egress"
@@ -121,6 +123,8 @@ resource "aws_security_group_rule" "bastion_to_any" {
 }
 
 resource "aws_security_group_rule" "remote_ssh" {
+  description = "Remote SSH"
+
   count = local.bastion_enable ? 1 : 0
 
   type              = "ingress"

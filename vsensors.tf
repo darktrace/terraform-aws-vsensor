@@ -66,8 +66,8 @@ resource "aws_launch_template" "vsensor" {
     ebs {
       delete_on_termination = true
       encrypted             = true
-      volume_size           = 20
-      volume_type           = "gp2"
+      volume_size           = var.instance_volume_size
+      volume_type           = "gp3"
 
     }
   }

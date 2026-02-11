@@ -63,6 +63,17 @@ variable "instance_type" {
   }
 }
 
+variable "instance_volume_size" {
+  type        = number
+  description = "The size of the volume in GB for the vSensor instances. The default is 20 GB, but it can be increased if you expect high traffic and more data to be processed by the vSensor."
+  default     = 20
+
+  validation {
+    condition     = floor(var.instance_volume_size) == var.instance_volume_size && var.instance_volume_size >= 20 && var.instance_volume_size <= 1000
+    error_message = "The instance_volume_size must be a whole number between 20 and 1000 GB."
+  }
+}
+
 variable "ssh_keyname" {
   type        = string
   description = "(Optional) Name of the ssh key pair stored in AWS. This key will be added to the vSensor ssh configuration."

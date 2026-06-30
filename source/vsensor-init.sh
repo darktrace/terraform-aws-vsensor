@@ -15,17 +15,25 @@ exec > >(tee -a /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>
 
 trap exittrap EXIT
 
-date
-apt-get -o DPkg::Lock::Timeout=240 update
+echo "Starting user-data"
 
+echo "Getting instance ID"
+TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 120" -s`
+INSTANCE_ID=`curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id -s`
+echo "Got instance ID: $INSTANCE_ID"
+
+echo "Installing AWS CLI for lifecycle actions and SSM Parameter Store support"
 date
 snap install aws-cli --classic
+
+echo "Attempting to disable source-dest checking for Autonomous Response."
+aws ec2 modify-instance-attribute --no-source-dest-check --instance-id $INSTANCE_ID --region ${vsensor_region} && echo "Succeeded to set --no-source-dest-check." || echo "Failed to set --no-source-dest-check. Continuing anyway." # This is not considered a fatal condition.
 
 date
 ###AmazonCloudWatch
 wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 
-dpkg -i -E ./amazon-cloudwatch-agent.deb
+apt-get -o DPkg::Lock::Timeout=240 install -y ./amazon-cloudwatch-agent.deb
 
 cat >CW_AGENT.conf <<'EOF'
 {
@@ -184,23 +192,16 @@ fi
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:./CW_AGENT.conf -s
 
 systemctl start amazon-cloudwatch-agent
-
-
-###get instance ID and attempt to disable source-dest checking metadata
-echo "Getting instance ID and attempt to disable source-dest checking metadata."
-TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 120" -s`
-INSTANCE_ID=`curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id -s`
-aws ec2 modify-instance-attribute --no-source-dest-check --instance-id $INSTANCE_ID --region ${vsensor_region} && echo "Succeeded to set --no-source-dest-check." || echo "Failed to set --no-source-dest-check. Continuing anyway." # This is not considered a fatal condition.
-
+echo "Cloudwatch configuration complete."
 
 ###vSensor installation
 
 update_key=$(aws ssm get-parameter --name ${update_key} --with-decryption --query "Parameter.Value" --output text --region ${vsensor_region})
 
 
-bash <(wget https://packages.darktrace.com/install -O -) --updateKey "$update_key"
+bash <(wget https://packages-cdn.darktrace.com/install -O -) --updateKey "$update_key"
 
-
+echo "Setting configuration"
 push_token=$(aws ssm get-parameter --name ${push_token} --with-decryption --query "Parameter.Value" --output text --region ${vsensor_region})
 set_pushtoken.sh "$push_token" ${instance_host_name}:${instance_port} ${vsensor_proxy}
 
@@ -222,6 +223,8 @@ aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --i
 
 #start upgrades in the background
 /usr/sbin/cron-apt-dist-upgrade.sh || true
+
+echo "Userdata script complete."
 
 #do NOT delete the below line (although it is commented out)
 #${parameter_version}
